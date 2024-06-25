@@ -1,0 +1,115 @@
+Installation
+Clone the repository:
+
+git clone https://github.com/yourusername/image-processing-project.git
+Navigate to the project directory:
+
+cd image-processing-project
+Install the required dependencies:
+
+pip install pillow numpy
+
+Usage
+Input and Output Paths:
+Set the input_image_path to the path of the image you want to process.
+Set the output_folder_path to the folder where you want to save the processed images.
+
+Run the Script:
+
+from PIL import Image
+import numpy as np
+
+def convert_to_gray(image_path):
+    # Open the image
+    image = Image.open(image_path)
+    
+    # Convert the image to RGB mode if it's not already in RGB
+    image = image.convert('RGB')
+    
+    # Get image dimensions
+    width, height = image.size
+    
+    # Create a new image in grayscale mode
+    gray_image = Image.new('L', (width, height))
+    
+    # Iterate over each pixel in the image
+    for y in range(height):
+        for x in range(width):
+            # Get the pixel value at (x, y)
+            pixel = image.getpixel((x, y))
+            
+            # Compute grayscale value using luminosity method
+            gray_value = int((pixel[0] + pixel[1] + pixel[2]) / 3)
+            
+            # Update the pixel value in the grayscale image
+            gray_image.putpixel((x, y), gray_value)
+    
+    return gray_image
+
+def split_image(image, threshold):
+    image_array = np.array(image)
+    rows, cols = image_array.shape
+    
+    # If the image size is zero, return an empty list
+    if rows == 0 or cols == 0:
+        return []
+    
+    # Find the maximum and minimum pixel values in the image
+    image_max = np.max(image_array)
+    image_min = np.min(image_array)
+    
+    # If the difference between maximum and minimum pixel values is less than the threshold, return the image as is
+    if image_max - image_min <= threshold:
+        return [image]
+    
+    # Calculate the midpoint of rows and columns
+    mid_row, mid_col = rows // 2, cols // 2
+    
+    # Split the image into four equal parts
+    top_left = Image.fromarray(image_array[:mid_row, :mid_col])
+    top_right = Image.fromarray(image_array[:mid_row, mid_col:])
+    bottom_left = Image.fromarray(image_array[mid_row:, :mid_col])
+    bottom_right = Image.fromarray(image_array[mid_row:, mid_col:])
+    
+    # Recursively split each part
+    split_images = []
+    split_images.extend(split_image(top_left, threshold))
+    split_images.extend(split_image(top_right, threshold))
+    split_images.extend(split_image(bottom_left, threshold))
+    split_images.extend(split_image(bottom_right, threshold))
+    
+    return split_images
+
+# Input and output paths
+input_image_path = 'C:\\Users\\user\\Desktop\\cv_project\\data.jpg'
+output_folder_path = 'C:\\Users\\user\\Desktop\\cv_project\\'
+
+# Convert the input image to grayscale
+gray_image = convert_to_gray(input_image_path)
+
+# Split the grayscale image based on threshold
+threshold = 200
+split_images = split_image(gray_image, threshold)
+
+# Save the split images
+for i, split_image in enumerate(split_images):
+    out_path = f'{output_folder_path}split_image_{i + 1}.jpg'
+    split_image.save(out_path)
+
+print(f"{len(split_images)} images split successfully based on threshold {threshold}.")
+Check Output: The split grayscale images will be saved in the specified output folder with filenames like split_image_1.jpg, split_image_2.jpg, etc.
+
+Functions
+convert_to_gray(image_path)
+Description: Converts an image to grayscale.
+Parameters:
+image_path (str): The path to the image file.
+Returns:
+gray_image (PIL.Image): The grayscale image.
+split_image(image, threshold)
+Description: Recursively splits a grayscale image into smaller parts based on a pixel value threshold.
+Parameters:
+image (PIL.Image): The grayscale image to split.
+threshold (int): The pixel value difference threshold for splitting.
+Returns:
+split_images (list): List of split grayscale images.
